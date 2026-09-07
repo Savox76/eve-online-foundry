@@ -144,3 +144,10 @@ jobs:
       - name: clippy
         working-directory: src-tauri
         run: cargo clippy --all-targets -- -D warnings
+
+      - name: cargo test
+        # Die Schale hat wenig Code, aber der wenige ist heikel: das
+        # Sitzungsgeheimnis ist das Einzige, was den Loopback-Server von jedem
+        # anderen Prozess auf dem Rechner trennt.
+        working-directory: src-tauri
+        run: cargo test --lib

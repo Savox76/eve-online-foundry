@@ -13,7 +13,6 @@
 use std::sync::Mutex;
 
 use base64::Engine as _;
-use rand::RngCore;
 use tauri::{Emitter, Manager, RunEvent, WindowEvent};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
@@ -30,7 +29,10 @@ struct SessionSecret(String);
 
 fn generate_secret() -> String {
     let mut bytes = [0u8; 32];
-    rand::thread_rng().fill_bytes(&mut bytes);
+    // `rand::fill` zieht aus dem Thread-RNG, und der ist ChaCha12 -- ein
+    // kryptographisch tauglicher Generator. Das ist hier keine Nebensache:
+    // wer das Geheimnis erraten kann, spricht mit dem Backend.
+    rand::fill(&mut bytes);
     base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes)
 }
 
@@ -137,5 +139,48 @@ fn stop_backend(handle: &tauri::AppHandle) {
                 let _ = child.kill();
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    /// Das Sitzungsgeheimnis ist das Einzige, was den Loopback-Server von
+    /// jedem anderen Prozess auf dem Rechner trennt. Was es leisten muss,
+    /// steht hier -- damit ein Wechsel der Zufallsquelle auffaellt und nicht
+    /// stillschweigend durchgeht.
+    #[test]
+    fn geheimnis_ist_lang_genug_und_url_sicher() {
+        let secret = generate_secret();
+
+        // 32 Bytes ergeben base64url-kodiert 43 Zeichen.
+        assert_eq!(secret.len(), 43, "32 Zufallsbytes erwartet");
+        // Ohne Padding und ohne Zeichen, die in einem Header stoeren.
+        assert!(!secret.contains('='), "Padding gehoert nicht hinein");
+        assert!(
+            !secret.contains('+') && !secret.contains('/'),
+            "nicht URL-sicher"
+        );
+    }
+
+    #[test]
+    fn jeder_start_bekommt_ein_eigenes_geheimnis() {
+        // Ein wiederverwendetes Geheimnis waere schlimmer als keines: es
+        // ueberlebte den Neustart und damit den Zweck.
+        let gezogen: HashSet<String> = (0..1000).map(|_| generate_secret()).collect();
+        assert_eq!(gezogen.len(), 1000, "Wiederholung in 1000 Ziehungen");
+    }
+
+    /// Sichert zu, dass die Zufallsquelle kryptographisch taugt.
+    ///
+    /// `rand::fill` zieht aus dem Thread-RNG. Wuerde der irgendwann kein
+    /// `TryCryptoRng` mehr sein, bricht dieser Test die Uebersetzung -- statt
+    /// dass das Geheimnis leiser Weise erratbar wird.
+    #[test]
+    fn zufallsquelle_ist_kryptographisch() {
+        fn erwarte_crypto<T: rand::TryCryptoRng>(_: &T) {}
+        erwarte_crypto(&rand::rng());
     }
 }
