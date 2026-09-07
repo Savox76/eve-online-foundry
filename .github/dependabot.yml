@@ -1,3 +1,21 @@
+# Dependabot.
+#
+# Die erste Fassung dieser Datei hat auf einem frischen Repository zwölf PRs
+# auf einmal erzeugt — ein PR je Paket über vier Ökosysteme. Das ist der
+# klassische Erststart-Schwall und macht die Branch-Liste unbrauchbar.
+#
+# Deshalb wird gruppiert, und zwar in zwei Töpfe je Ökosystem:
+#
+#   *-updates  Patches und Minors. Laufen in aller Regel durch; ein gesammelter
+#              PR je Woche reicht, und die CI sagt, ob er grün ist.
+#   *-major    Major-Sprünge. Die brauchen fast immer Handarbeit — der Bump von
+#              `rand` 0.8 auf 0.10 zerlegt den Sidecar-Handschlag, und
+#              Tailwind 4 schreibt das Konfigurationsformat komplett um. Sie
+#              bekommen einen eigenen, ebenfalls gesammelten PR: sichtbar,
+#              aber nicht acht Einträge lang.
+#
+# Sicherheitsupdates kommen unabhängig davon durch und werden nicht gruppiert.
+
 version: 2
 updates:
   - package-ecosystem: pip
@@ -5,18 +23,32 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     commit-message:
       prefix: chore
+    groups:
+      backend-updates:
+        patterns: ["*"]
+        update-types: [minor, patch]
+      backend-major:
+        patterns: ["*"]
+        update-types: [major]
 
   - package-ecosystem: npm
     directory: /frontend
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     commit-message:
       prefix: chore
+    groups:
+      frontend-updates:
+        patterns: ["*"]
+        update-types: [minor, patch]
+      frontend-major:
+        patterns: ["*"]
+        update-types: [major]
 
   - package-ecosystem: cargo
     directory: /src-tauri
@@ -26,10 +58,21 @@ updates:
     open-pull-requests-limit: 3
     commit-message:
       prefix: chore
+    groups:
+      shell-updates:
+        patterns: ["*"]
+        update-types: [minor, patch]
+      shell-major:
+        patterns: ["*"]
+        update-types: [major]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    open-pull-requests-limit: 2
     commit-message:
       prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]
