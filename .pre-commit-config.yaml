@@ -1,0 +1,43 @@
+# Installation:  pip install pre-commit && pre-commit install
+#
+# Der gitleaks-Hook wird VOR dem ersten Commit eingerichtet, nicht irgendwann
+# spaeter (Kapitel 16). Er ist der einzige Schutz, der sich nicht nachholen
+# laesst: ein Geheimnis, das einmal in der Historie eines oeffentlichen Repos
+# steht, ist innerhalb von Minuten abgeerntet.
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.0
+    hooks:
+      - id: gitleaks
+        args: ["--config", ".gitleaks.toml"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=512"]
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  - repo: local
+    hooks:
+      - id: conventional-commit
+        name: Conventional Commit Message
+        entry: python scripts/check_commit_msg.py
+        language: system
+        stages: [commit-msg]

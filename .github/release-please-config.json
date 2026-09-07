@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "simple",
+  "include-component-in-tag": false,
+  "include-v-in-tag": true,
+  "changelog-path": "CHANGELOG.md",
+  "packages": {
+    ".": {
+      "changelog-sections": [
+        { "type": "feat", "section": "Neu" },
+        { "type": "fix", "section": "Behoben" },
+        { "type": "perf", "section": "Schneller" },
+        { "type": "esi", "section": "ESI-Anpassung" },
+        { "type": "refactor", "section": "Intern", "hidden": true },
+        { "type": "chore", "section": "Intern", "hidden": true },
+        { "type": "docs", "section": "Intern", "hidden": true },
+        { "type": "test", "section": "Intern", "hidden": true },
+        { "type": "ci", "section": "Intern", "hidden": true }
+      ],
+      "extra-files": [
+        "backend/app/__init__.py",
+        "src-tauri/tauri.conf.json",
+        "src-tauri/Cargo.toml",
+        "frontend/package.json"
+      ]
+    }
+  }
+}

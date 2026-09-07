@@ -1,0 +1,30 @@
+# gitleaks-Konfiguration fuer New Eden Foundry.
+#
+# Laeuft als pre-commit-Hook (vor dem Commit) und in ci.yml (vor dem Merge).
+# GitHubs Push Protection greift zusaetzlich beim Push. Der Hook ist der
+# wichtigste der drei: was nie in der Historie stand, muss auch nicht aus ihr
+# entfernt werden.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "eve-sso-refresh-token"
+description = "EVE SSO Refresh Token (gehoert in den Schluesselbund, nie in eine Datei)"
+regex = '''(?i)(refresh[_-]?token)["'\s:=]{1,8}[A-Za-z0-9+/=_-]{40,}'''
+tags = ["eve", "token"]
+
+[[rules]]
+id = "eve-sso-client-secret"
+description = "EVE SSO Client Secret -- native Anwendungen haben keins; taucht eins auf, stimmt der Flow nicht"
+regex = '''(?i)(client[_-]?secret)["'\s:=]{1,8}[A-Za-z0-9+/=_-]{20,}'''
+tags = ["eve", "secret"]
+
+[allowlist]
+description = "Beispieldateien und synthetische Demo-Daten"
+paths = [
+  '''\.env\.example$''',
+  '''^demo/''',
+  '''^docs/''',
+  '''\.gitleaks\.toml$''',
+]

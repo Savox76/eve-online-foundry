@@ -1,0 +1,146 @@
+name: CI
+
+# Es werden bewusst KEINE Build-Ergebnisse gespeichert: keine Container-Images,
+# keine Actions-Artefakte, keine Dateien an Releases. GitHub haelt Quelltext,
+# Pruefungen und Release Notes -- gebaut wird dort, wo Foundry laeuft
+# (Kapitel 16). Die einzige Ausnahme sind spaeter die fertigen Installer in
+# release.yml, weil der Updater sie irgendwo herunterladen muss.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "22"
+
+jobs:
+  secrets:
+    name: Geheimnisse
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Abhaengigkeiten
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+
+      - name: ruff
+        run: .venv/bin/ruff check app tests
+
+      - name: ruff format
+        run: .venv/bin/ruff format --check app tests
+
+      - name: mypy
+        run: .venv/bin/mypy app
+
+      - name: bandit
+        run: .venv/bin/bandit -q -c pyproject.toml -r app
+
+      - name: Migration gegen eine Wegwerf-Datenbank
+        # Beweist, dass die Migrationen aus dem Nichts durchlaufen -- und dank
+        # downgrade auch, dass sie vollstaendig geschrieben sind.
+        env:
+          FOUNDRY_DATA_DIR: ${{ runner.temp }}/foundry-ci
+        run: |
+          mkdir -p "$FOUNDRY_DATA_DIR"
+          .venv/bin/alembic upgrade head
+          .venv/bin/alembic downgrade base
+          .venv/bin/alembic upgrade head
+
+      - name: SDE-Import gegen die synthetischen Demo-Daten
+        env:
+          FOUNDRY_DATA_DIR: ${{ runner.temp }}/foundry-ci
+        run: .venv/bin/python -m app.sde.importer --source ../demo/sde --build ci
+
+      - name: pytest
+        env:
+          FOUNDRY_DATA_DIR: ${{ runner.temp }}/foundry-tests
+        run: |
+          mkdir -p "$FOUNDRY_DATA_DIR"
+          .venv/bin/pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - name: eslint
+        run: npm run lint
+      - name: tsc --noEmit
+        run: npm run typecheck
+      - name: vitest
+        run: npm run test
+      - name: Build als reine Pruefung
+        run: npm run build
+
+  shell:
+    name: Schale
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Systembibliotheken fuer Tauri
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
+            librsvg2-dev patchelf libsoup-3.0-dev
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Frontend-Ausgabe bereitstellen
+        # tauri.conf.json verweist auf ../frontend/dist. Ohne das Verzeichnis
+        # bricht schon die Konfigurationspruefung ab.
+        run: mkdir -p frontend/dist && echo '<!doctype html>' > frontend/dist/index.html
+
+      - name: rustfmt
+        working-directory: src-tauri
+        run: cargo fmt --check
+
+      - name: clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets -- -D warnings

@@ -1,0 +1,29 @@
+name: Release
+
+# release-please haelt dauerhaft einen Release-PR offen, in dem die naechste
+# Version, die angehobene Versionsnummer und der fertige Changelog-Abschnitt
+# stehen. Beim Merge werden Tag und GitHub-Release samt Notes angelegt -- mehr
+# passiert hier nicht, und genau das ist gewollt (Kapitel 16).
+#
+# Die Installer-Builds kommen erst dazu, wenn der Signaturschluessel erzeugt und
+# als Repository-Secret hinterlegt ist. Bis dahin waere ein Release-Workflow,
+# der Binaerdateien anhaengt, nur eine Fehlerquelle: der Updater akzeptiert
+# ohnehin nichts Unsigniertes.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json

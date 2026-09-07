@@ -1,0 +1,52 @@
+# --- Geheimnisse: niemals ins Repo -------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+
+# --- Laufzeitdaten ------------------------------------------------------------
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+data/
+sde-cache/
+backups/
+
+# --- Python -------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+*.spec
+
+# --- Node ---------------------------------------------------------------------
+node_modules/
+frontend/dist/
+site/dist/
+.vite/
+*.tsbuildinfo
+
+# --- Rust / Tauri -------------------------------------------------------------
+src-tauri/target/
+src-tauri/gen/
+src-tauri/binaries/
+
+# --- Werkzeuge ----------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+!.vscode/extensions.json

@@ -1,0 +1,50 @@
+name: Idee einbringen
+description: Ein Vorschlag für eine Funktion.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Der Maßstab
+
+        Kapitel 1 des Masterplans: Foundry wird **kein** Killboard, kein
+        Auth-Portal, kein Marktbot und kein Ersatz für Alliance Auth oder SeAT.
+        Industrie-Werkzeuge sterben an Feature-Kriechen, nicht an Technik.
+
+        Jede Idee wird ein Issue, kein Branch — deshalb ist dieses Formular
+        genau richtig, auch wenn die Idee vielleicht nie umgesetzt wird.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Welches Problem löst das?
+      description: Bitte das Problem beschreiben, nicht die Lösung.
+    validations:
+      required: true
+  - type: textarea
+    id: vorschlag
+    attributes:
+      label: Wie könnte es aussehen?
+    validations:
+      required: true
+  - type: dropdown
+    id: tab
+    attributes:
+      label: Wo würde es hingehören?
+      options:
+        - Industrie Übersicht
+        - Projekte
+        - T2 Invention
+        - Produktion
+        - Markt & Produktionsscanner
+        - Assets
+        - Blueprint Bibliothek
+        - Planetare Industrie
+        - Nirgends davon
+    validations:
+      required: true
+  - type: checkboxes
+    id: esi
+    attributes:
+      label: Auslöser
+      options:
+        - label: Das wird durch eine ESI-Änderung ausgelöst (bitte zusätzlich das Label `esi-change` setzen).

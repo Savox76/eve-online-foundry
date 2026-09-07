@@ -1,0 +1,66 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie beschrieben.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Bevor du absendest
+
+        Dieses Repository ist **öffentlich**. Corp-Daten sind in EVE
+        Aufklärungsmaterial: echte Struktur-IDs, Standorte, Bestandshöhen oder
+        Doktrin-Fittings sind genau die Information, nach der Gegner suchen —
+        und aus einem öffentlichen Issue-Tracker bekommt man sie nicht wieder
+        heraus.
+
+        **Bitte schwärze in Screenshots und Logs alles, was aus einem echten
+        Spielstand stammt.** Wenn sich der Fehler nur mit echten Daten zeigen
+        lässt: melde ihn im Discord, nicht hier.
+  - type: textarea
+    id: erwartet
+    attributes:
+      label: Was sollte passieren?
+    validations:
+      required: true
+  - type: textarea
+    id: passiert
+    attributes:
+      label: Was passiert stattdessen?
+    validations:
+      required: true
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Schritte zum Nachvollziehen
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Steht im Betriebszustand hinter dem Nutzermenü.
+    validations:
+      required: true
+  - type: dropdown
+    id: system
+    attributes:
+      label: Betriebssystem
+      options: [Windows, macOS, Linux]
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Auszug aus dem Log
+      description: Geschwärzt. Mailinhalte gehören nie in ein Log — falls doch welche auftauchen, ist das ein eigener Fehlerbericht.
+      render: text
+  - type: checkboxes
+    id: bestaetigung
+    attributes:
+      label: Bestätigung
+      options:
+        - label: Dieser Bericht enthält keine echten Charakter-, Struktur- oder Standort-IDs.
+          required: true

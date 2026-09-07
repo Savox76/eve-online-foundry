@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Fehler mit echten Corp-Daten
+    url: https://github.com/Savox76/eve-online-foundry/blob/main/demo/README.md
+    about: >-
+      Bitte NICHT hier melden. Screenshots von Corp-Hangars, echte Struktur-IDs
+      oder Doktrin-Fittings sind in einem oeffentlichen Tracker ein Leak, den
+      niemand als solchen bemerkt. Solche Meldungen gehoeren in den Discord.
