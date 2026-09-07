@@ -23,9 +23,9 @@ from app.core.paths import backup_dir, database_path
 
 
 # -- Migration ---------------------------------------------------------------
-def test_erste_migration_legt_die_datenbank_an(isolated_data_dir: Path) -> None:
+def test_erste_migration_legt_die_datenbank_an(isolated_data_dir: Path, head_revision: str) -> None:
     assert current_revision(database_path()) is None
-    assert upgrade_to_head() == "0001_fundament"
+    assert upgrade_to_head() == head_revision
     assert database_path().exists()
 
 

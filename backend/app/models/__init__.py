@@ -23,7 +23,16 @@ PostgreSQL, falls doch ein Corp-Server dazukommt.
 
 from app.models.app_data import AppSetting
 from app.models.base import Base
-from app.models.esi import HttpCacheEntry, SyncRun
+from app.models.esi import (
+    Asset,
+    AssetChange,
+    Character,
+    CharacterRole,
+    CharacterToken,
+    HttpCacheEntry,
+    Structure,
+    SyncRun,
+)
 from app.models.sde import (
     SdeBlueprint,
     SdeBlueprintMaterial,
@@ -43,7 +52,12 @@ from app.models.sde import (
 
 __all__ = [
     "AppSetting",
+    "Asset",
+    "AssetChange",
     "Base",
+    "Character",
+    "CharacterRole",
+    "CharacterToken",
     "HttpCacheEntry",
     "SdeBlueprint",
     "SdeBlueprintMaterial",
@@ -59,5 +73,6 @@ __all__ = [
     "SdeStation",
     "SdeSystem",
     "SdeType",
+    "Structure",
     "SyncRun",
 ]

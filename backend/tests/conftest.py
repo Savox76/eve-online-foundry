@@ -46,6 +46,23 @@ def migrated_db(isolated_data_dir: Path) -> Path:
 
 
 @pytest.fixture
+def head_revision() -> str:
+    """Die aktuelle Kopf-Revision.
+
+    Gegen sie zu pruefen statt gegen eine festgeschriebene Kennung heisst: bei
+    jeder neuen Migration bleibt der Test richtig, ohne angefasst zu werden.
+    """
+    from alembic.script import ScriptDirectory
+
+    from app.core.migrate import alembic_config
+    from app.core.paths import database_path
+
+    head = ScriptDirectory.from_config(alembic_config(database_path())).get_current_head()
+    assert head is not None
+    return head
+
+
+@pytest.fixture
 def demo_sde() -> Path:
     """Die synthetischen Static-Data-Testdaten aus ``demo/sde``."""
     path = Path(__file__).resolve().parents[2] / "demo" / "sde"
