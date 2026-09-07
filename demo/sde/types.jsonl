@@ -1,0 +1,14 @@
+{"_key": 9900001, "groupID": 9910001, "name": {"en": "Duraluminium", "de": "Duraluminium"}, "description": {"en": "Synthetisches Grundmineral. Existiert nur in der Demo."}, "volume": 0.01, "packagedVolume": 0.01, "mass": 1.0, "portionSize": 1, "marketGroupID": 9960001, "published": true}
+{"_key": 9900002, "groupID": 9910001, "name": {"en": "Voidsalt"}, "volume": 0.01, "packagedVolume": 0.01, "mass": 1.0, "portionSize": 1, "marketGroupID": 9960001, "published": true}
+{"_key": 9900003, "groupID": 9910001, "name": {"en": "Cindergrain"}, "volume": 0.02, "packagedVolume": 0.02, "mass": 2.0, "portionSize": 1, "marketGroupID": 9960001, "published": true}
+{"_key": 9900010, "groupID": 9910002, "name": {"en": "Lattice Plating"}, "volume": 0.5, "packagedVolume": 0.5, "mass": 10.0, "portionSize": 1, "marketGroupID": 9960002, "published": true}
+{"_key": 9900011, "groupID": 9910002, "name": {"en": "Field Coupler"}, "volume": 0.5, "packagedVolume": 0.5, "mass": 8.0, "portionSize": 1, "marketGroupID": 9960002, "published": true}
+{"_key": 9900020, "groupID": 9910003, "name": {"en": "Ashling", "de": "Ashling"}, "description": {"en": "Demo-Fregatte. Nicht im Spiel vorhanden."}, "volume": 27500.0, "packagedVolume": 2500.0, "mass": 1200000.0, "portionSize": 1, "marketGroupID": 9960003, "published": true}
+{"_key": 9900021, "groupID": 9910003, "name": {"en": "Ashling II"}, "volume": 27500.0, "packagedVolume": 2500.0, "mass": 1200000.0, "portionSize": 1, "marketGroupID": 9960003, "published": true}
+{"_key": 9900030, "groupID": 9910004, "name": {"en": "Ashling Blueprint"}, "volume": 0.01, "packagedVolume": 0.01, "portionSize": 1, "published": true}
+{"_key": 9900031, "groupID": 9910004, "name": {"en": "Ashling II Blueprint"}, "volume": 0.01, "packagedVolume": 0.01, "portionSize": 1, "published": false}
+{"_key": 9900040, "groupID": 9910005, "name": {"en": "Bittermoss"}, "volume": 0.01, "packagedVolume": 0.01, "portionSize": 1, "published": true}
+{"_key": 9900041, "groupID": 9910005, "name": {"en": "Refined Bittermoss"}, "volume": 0.38, "packagedVolume": 0.38, "portionSize": 1, "published": true}
+{"_key": 9900050, "groupID": 9910002, "name": {"en": "Demo Datacore - Synthetic Physics"}, "volume": 0.1, "packagedVolume": 0.1, "portionSize": 1, "published": true}
+{"_key": 9900060, "groupID": 9910002, "name": {"en": "Demo Industry Skill"}, "volume": 0.01, "packagedVolume": 0.01, "portionSize": 1, "published": true}
+{"_key": 9900090, "groupID": 9910002, "name": {"en": "Broken Line Guard"
