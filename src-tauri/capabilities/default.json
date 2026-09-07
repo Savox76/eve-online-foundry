@@ -1,0 +1,21 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Was das Fenster darf. Bewusst knapp: alles Weitere geht ueber das eigene Backend, nicht ueber Tauri-Rechte.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:allow-execute",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://login.eveonline.com/*"
+        },
+        {
+          "url": "https://github.com/Savox76/eve-online-foundry/*"
+        }
+      ]
+    }
+  ]
+}
