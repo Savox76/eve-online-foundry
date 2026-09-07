@@ -132,10 +132,29 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Frontend-Ausgabe bereitstellen
-        # tauri.conf.json verweist auf ../frontend/dist. Ohne das Verzeichnis
-        # bricht schon die Konfigurationspruefung ab.
-        run: mkdir -p frontend/dist && echo '<!doctype html>' > frontend/dist/index.html
+      - name: Attrappen fuer die Pruefung anlegen
+        # Zwei Dinge erwartet das Tauri-Build-Skript, die es in einem reinen
+        # Pruefungslauf nicht gibt -- und ohne sie bricht es mit Exitcode 101
+        # ab, bevor auch nur eine Zeile Rust uebersetzt wird:
+        #
+        #   frontendDist   ../frontend/dist
+        #   externalBin    binaries/foundry-backend-<target-triple>
+        #
+        # Den Sidecar hier wirklich zu buendeln waere Minuten fuer nichts: der
+        # Job prueft Rust-Code, er baut keinen Installer. Der Dateiname kommt
+        # aus scripts/build_sidecar.py, damit die Triple-Regel eine einzige
+        # Quelle behaelt -- ein falsch benannter Sidecar wird sonst kommentarlos
+        # nicht gefunden.
+        run: |
+          mkdir -p frontend/dist
+          echo '<!doctype html>' > frontend/dist/index.html
+
+          ziel=$(python3 scripts/build_sidecar.py --check | sed -n 's/^Tauri erwartet: //p')
+          test -n "$ziel" || { echo "Sidecar-Name nicht ermittelbar"; exit 1; }
+          mkdir -p "$(dirname "$ziel")"
+          printf '#!/bin/sh\nexit 0\n' > "$ziel"
+          chmod +x "$ziel"
+          echo "Attrappe angelegt: $ziel"
 
       - name: rustfmt
         working-directory: src-tauri
