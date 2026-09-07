@@ -23,7 +23,8 @@ Marktbot oder Ersatz für Alliance Auth und SeAT.
 
 ## Stand
 
-**Phase 1 abgeschlossen, dazu der Durchstich in Phase 2.** Die Anwendung
+**[v0.2.0 „Erste Schmelze“](https://github.com/Savox76/eve-online-foundry/releases/tag/v0.2.0)
+— Phase 1 abgeschlossen, dazu der Durchstich in Phase 2.** Die Anwendung
 startet, migriert ihre Datenbank selbst, importiert den Static Data Export —
 und verbindet Charaktere über EVE SSO, hält sie angemeldet und zeigt ihre
 Bestände in einer durchsuchbaren Tabelle samt Delta-Ansicht.
