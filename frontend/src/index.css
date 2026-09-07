@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-ground text-ink font-sans antialiased;
+  }
+
+  /* Zahlen tabellarisch setzen, ueberall wo ISK-Betraege oder Mengen
+     untereinanderstehen -- sonst springen die Spalten (Kapitel 15). */
+  .tabular,
+  td.num,
+  th.num {
+    font-variant-numeric: tabular-nums;
+  }
+}
