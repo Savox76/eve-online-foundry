@@ -20,6 +20,7 @@
       ],
       "extra-files": [
         "backend/app/__init__.py",
+        "backend/pyproject.toml",
         "src-tauri/tauri.conf.json",
         "src-tauri/Cargo.toml",
         "frontend/package.json"
