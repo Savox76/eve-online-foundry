@@ -26,3 +26,18 @@ Release mit Datenbank-Migration ist niemals ein Patch-Release.**
   Static-Data-Stand, Alter des Kompatibilitätsdatums, ESI-Fehlerbudget.
 - Synthetische Demo-Daten in `demo/` als einzige Quelle für Testfixtures und
   Screenshots.
+- **EVE SSO:** nativer Login mit PKCE über den Systembrowser, kurzlebiger
+  Callback-Listener auf einem festen Port, Offline-Prüfung des Access Tokens
+  gegen den JWKS. Refresh Tokens liegen im Schlüsselbund des Systems, mit
+  einer verschlüsselten Datei als Rückfallebene; der neue Token wird bei jedem
+  Refresh sofort gespeichert.
+- Gestaffelte Scope-Pakete statt eines Consent-Fensters, das alles auf einmal
+  anfragt. Erteilte Corp-Scopes, denen die passende In-Game-Rolle fehlt,
+  werden benannt statt als leere Liste angezeigt.
+- Erkennung übertragener Charaktere über den `owner`-Claim: Tokens und
+  Bestände des alten Besitzers werden verworfen.
+- **Bestände:** Abruf je Charakter mit Auflösung verschachtelter Container
+  über eine rekursive CTE, Namen benannter Container und Schiffe, und das
+  Asset-Delta vom ersten Sync an — es lässt sich nicht rückwirkend nachholen.
+- Tab **Assets** mit Suche, Ortsfilter, Volumenangabe je Zeile und der
+  Ansicht „seit gestern".

@@ -1,4 +1,4 @@
-# Architektur — Stand Phase 0
+# Architektur — Stand Phase 1 + Durchstich
 
 > Der Masterplan ist der Entwurf, dieses Dokument ist der Stand. Wo beide
 > auseinandergehen, gilt das Repository.
@@ -23,7 +23,8 @@ Backend, das Backend hält die Datenbank.
 | Pfad | Inhalt |
 |---|---|
 | `backend/app/core/` | Konfiguration, Datenbank, Sicherheit, Migration, Instanzsperre, Rate-Limit-Budget |
-| `backend/app/esi/` | ESI-Client, Routenkatalog, Scopes, Kompatibilitätsdatum, Cache, Fehlerarten |
+| `backend/app/esi/` | ESI-Client, Routenkatalog, Scopes, Kompatibilitätsdatum, Cache, Fehlerarten, SSO-Flow (PKCE, JWKS, Callback, Token-Speicher) |
+| `backend/app/services/` | Charaktere, Bestände, Standortauflösung |
 | `backend/app/sde/` | Static-Data-Import: Loader, Datensatz-Zuordnung, Importer-CLI |
 | `backend/app/models/` | SQLAlchemy-Modelle, getrennt nach `sde_`, `esi_`, `app_` |
 | `backend/app/api/v1/` | Ein Router je Fachbereich; die noch nicht dran sind, sind leer |
@@ -114,6 +115,104 @@ auch für eine Webseite im Browser. Zwei Maßnahmen:
 Im Entwicklungsbetrieb gibt es keine Schale; dort legt das Backend das
 Geheimnis im Datenverzeichnis ab und der Vite-Proxy hängt es an.
 
+### Der Login: nativ, mit PKCE, ohne Client Secret
+
+Als Desktop-Anwendung gilt der native Flow. Eine installierte Anwendung kann
+ohnehin nichts geheim halten — statt eines Client Secrets weist sie sich über
+PKCE aus: sie schickt beim Tausch von Code gegen Token den `code_verifier`
+nach, aus dem die zuvor übermittelte `code_challenge` gebildet wurde.
+
+Der Ablauf verteilt sich auf vier Module, und die Trennung hat einen Grund:
+
+| Modul | Aufgabe |
+|---|---|
+| `esi/pkce.py` | Verifier, Challenge, `state` |
+| `esi/callback.py` | Der kurzlebige Listener auf Port 8765 |
+| `esi/sso.py` | Token-Endpunkt, formularkodiert |
+| `esi/jwks.py` | Offline-Prüfung des Access Tokens |
+
+**Der Listener lebt genau einen Login lang.** Ein dauerhaft offener Port wäre
+eine unnötige Angriffsfläche für eine Anwendung, die sich vielleicht einmal
+pro Woche anmeldet. Er bindet nur an `127.0.0.1` und verwirft jeden Rückruf,
+dessen `state` nicht zum laufenden Versuch gehört.
+
+**Geprüft wird offline gegen den JWKS**, nicht durch Nachfragen bei CCP: eine
+Anwendung, die bei jedem Request nachfragt, wartet unnötig und fällt aus,
+sobald der Login-Dienst kurz hängt. Vier Dinge werden geprüft — Signatur,
+Issuer, Audience (Client-ID **und** `"EVE Online"`, beides), Ablauf. Bei
+einem unbekannten `kid` wird der Schlüsselsatz einmal neu geholt; ist der
+Dienst nicht erreichbar, gilt der letzte Stand weiter statt den Nutzer
+auszusperren.
+
+### Wo der Refresh Token liegt — und wo nicht
+
+Im **Schlüsselbund des Systems**: Windows Credential Manager, macOS Keychain,
+Secret Service unter Linux. Ob der wirklich nutzbar ist, wird durch einen
+echten Schreib-Lese-Löschzyklus festgestellt, nicht durch eine Abfrage —
+`keyring` meldet auch dann ein Backend, wenn dahinter kein laufender Dienst
+steht, und unter Linux ohne Desktop-Sitzung ist das der Normalfall.
+
+Fällt er aus, greift eine verschlüsselte Datei mit `0600`. Diese Ebene ist
+**schwächer**, und zwar in einem Punkt, den man kennen muss: der Schlüssel
+liegt neben den Daten. Was sie trotzdem leistet — der Token steht nirgends im
+Klartext und landet nicht versehentlich in einem Backup, einem Screenshot
+oder einem Bugreport. Genau das sind die Wege, auf denen so etwas in der
+Praxis abhandenkommt. Welche Ebene aktiv ist, steht in der Oberfläche.
+
+**In der Datenbank steht kein Token**, nur was über ihn bekannt ist: Scopes,
+Speicherort, Ablauf, Zahl der Fehlversuche. Eine Datenbankdatei wandert in
+Backups und auf USB-Sticks.
+
+Zwei Regeln aus Kapitel 4 sind fest verdrahtet:
+
+- **Der neue Refresh Token wird bei jedem Refresh sofort gespeichert.** CCP
+  tauscht ihn aus; wer den alten behält, fliegt beim übernächsten Start raus.
+- **Der `owner`-Claim wird mitgeführt und verglichen.** Ändert er sich, wurde
+  der Charakter verkauft: alle Tokens werden verworfen und die Bestände des
+  alten Besitzers gelöscht. Sonst zeigt Foundry fremde Assets an.
+
+Ein einzelner Ausfall des Login-Dienstes meldet niemanden ab — erst drei
+Fehlversuche in Folge setzen den Charakter auf `needs_reauth`, mit Begründung
+in der Oberfläche.
+
+### Standorte auflösen
+
+Ein `location_id` kann eine NPC-Station sein, eine Spielerstruktur, ein
+Sonnensystem — oder die `item_id` eines anderen Assets, also ein Container
+oder ein Schiff. Die Elternkette läuft eine rekursive CTE hoch, mit
+`depth < 32` als Zyklusschutz.
+
+**Der zweite Schritt ist der wichtigere.** Wer die Tiefengrenze erreicht, hat
+keine Wurzel gefunden, sondern nur aufgehört zu suchen. Solche Zeilen bekommen
+`root_location_id = NULL` und erscheinen als „unbekannt", statt einen
+erfundenen Ort zu tragen, der jedes Aggregat darüber verfälschen würde. Eine
+fehlende Angabe sieht man; eine falsche glaubt man. Die Zahl der
+unaufgelösten Zeilen steht über der Tabelle.
+
+Für Strukturen ohne Docking-Zugriff gilt derselbe Grundsatz: `Unbekannte
+Struktur #1035…` statt einer leeren Zelle, die wie ein Fehler aussieht.
+
+### Das Asset-Delta
+
+`esi_asset_changes` wird **vom ersten Sync an** mitgeschrieben — das ist die
+Entscheidung aus Kapitel 7, die sich nicht rückwirkend nachholen lässt. Vier
+Fälle werden unterschieden, und die Unterscheidung ist der Punkt:
+
+| Fall | Bedeutung |
+|---|---|
+| `added` | neu aufgetaucht |
+| `removed` | verschwunden — die Frage „wo sind die 2000 Morphite geblieben" |
+| `quantity` | Menge geändert, mit Vorher und Nachher |
+| `moved` | umgezogen, **nicht** als „weg" plus „neu" |
+
+Ohne den letzten Fall sähe jeder Transport wie ein Verlust aus. Und wo sich
+nichts geändert hat, wird nichts geschrieben — sonst wüchse die Tabelle bei
+jedem Lauf, ohne etwas auszusagen.
+
+Ein Delta allein sagt nur, dass etwas weg ist. Erst der Abgleich mit den
+Industrie-Jobs desselben Zeitraums macht daraus eine Aussage; dafür trägt die
+Tabelle bereits ein `job_id`-Feld, das Phase 3 füllt.
+
 ### Ein ESI-Client, ein Budget
 
 Rate Limit und Fehlerbudget gelten **pro Anwendung**, nicht pro Charakter.
@@ -125,8 +224,9 @@ Verkehr läuft. Details in [`esi-notes.md`](esi-notes.md).
 
 | Bereich | Phase | Anmerkung |
 |---|---|---|
-| SSO-Login, Token im Schlüsselbund | 1 | `app/esi/scopes.py` und die Callback-Konfiguration stehen bereits |
-| Asset-Sync, `esi_asset_changes` | 2 | Die Delta-Entscheidung ist getroffen, die Tabelle kommt mit dem Sync |
+| Corp-Bestände (`CorpSAG1`…`CorpSAG7`) | 2 | Der Charakter-Sync steht; Corp braucht Rollenprüfung und Divisionsnamen |
+| Strukturnamen über `/universe/structures/` | 2 | Die Tabelle `esi_structures` steht samt `access_denied`; der Abruf fehlt |
+| Suche über alle Charaktere zugleich | 2 | Die Tabelle filtert derzeit auf einen |
 | Blueprint-Bibliothek, Jobs | 3 | Die SDE-Seite liegt vollständig vor |
 | Produktionssolver, Job-Kosten | 4 | Gegen `api.everef.net/v1/industry/cost` zu validieren |
 | T2 Invention | 5 | SDE-Grundwahrscheinlichkeiten werden bereits importiert |

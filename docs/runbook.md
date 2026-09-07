@@ -125,10 +125,37 @@ die **vor** der Migration angelegt wurde. Zum Zurückrollen:
 ```bash
 cd ~/.local/share/NewEdenFoundry
 mv foundry.db foundry.db.kaputt
-cp backups/foundry-v0.1.0-0001_fundament-20260907-120000.db foundry.db
+cp backups/foundry-v0.1.0-0002_login_und_bestaende-20260907-120000.db foundry.db
 ```
 
 Dann die vorherige Version der Anwendung installieren und den Fehler melden.
+
+### Der Login kehrt nicht zurück
+
+Der Browser zeigt die Anmeldung, aber in Foundry passiert nichts.
+
+1. **Callback-URL prüfen.** Im Developers-Portal muss exakt
+   `http://localhost:8765/callback` stehen. Die SSO weist jede Abweichung
+   zurück — auch einen anderen Port.
+2. **Ist der Port belegt?** Läuft noch ein früherer Anmeldeversuch, meldet
+   Foundry das ausdrücklich. Der Listener schließt sich nach fünf Minuten
+   selbst.
+3. **Anwendungstyp.** Sie muss als `native` registriert sein. Ein
+   „Confidential Client" erwartet ein Client Secret, das der native Flow nicht
+   schickt.
+
+### Ein Charakter steht auf „Token erneuern nötig"
+
+Die Begründung steht direkt darunter. Die drei häufigen:
+
+- **„Der Refresh Token gilt nicht mehr."** Meist wurde die Anwendung im
+  Portal abgemeldet. Charakter entfernen und neu verbinden.
+- **„Der Charakter wurde übertragen."** Der `owner`-Claim hat sich geändert.
+  Foundry hat die Bestände des alten Besitzers bereits verworfen — das ist
+  richtig so.
+- **„Kein Refresh Token hinterlegt."** Der Schlüsselbund gibt nichts her.
+  Passiert nach einem Wechsel des Datenverzeichnisses oder wenn die
+  verschlüsselte Rückfalldatei mit einem fremden Schlüssel dasteht.
 
 ### Alle API-Antworten sind `401`
 

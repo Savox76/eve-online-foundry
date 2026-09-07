@@ -23,10 +23,19 @@ Marktbot oder Ersatz für Alliance Auth und SeAT.
 
 ## Stand
 
-**Phase 0 — Fundament.** Die Anwendung startet, migriert ihre Datenbank
-selbst, importiert den Static Data Export und zeigt ihren Betriebszustand.
-Fachlogik gibt es noch keine; die acht Tabs stehen als Navigation und sagen,
-ab welcher Phase sie Inhalt bekommen.
+**Phase 1 abgeschlossen, dazu der Durchstich in Phase 2.** Die Anwendung
+startet, migriert ihre Datenbank selbst, importiert den Static Data Export —
+und verbindet Charaktere über EVE SSO, hält sie angemeldet und zeigt ihre
+Bestände in einer durchsuchbaren Tabelle samt Delta-Ansicht.
+
+Von den acht Tabs hat **Assets** Inhalt; die übrigen sagen, ab welcher Phase
+sie welchen bekommen.
+
+> **Ein Vorbehalt, der dazugehört:** der Login ist gegen einen nachgebauten
+> SSO-Dienst getestet, nicht gegen `login.eveonline.com`. Dafür braucht es
+> eine registrierte Anwendung und einen echten Account. Der erste echte Login
+> ist der eigentliche Test — `docs/esi-notes.md` sagt, wo dann zuerst zu
+> suchen ist.
 
 | | |
 |---|---|
@@ -53,6 +62,12 @@ uv venv && uv pip install -e ".[dev]"
 # Oberfläche
 cd ../frontend && npm install && npm run dev
 ```
+
+Für den Login zusätzlich: im
+[EVE-Developers-Portal](https://developers.eveonline.com/) eine Anwendung vom
+Typ **native** anlegen, Callback exakt `http://localhost:8765/callback`, und
+die Client-ID in eine lokale `.env` schreiben. **Ein Client Secret gibt es
+nicht** — der native Flow arbeitet mit PKCE.
 
 Ausführlich, inklusive Fenster statt Browser: [`docs/runbook.md`](docs/runbook.md).
 

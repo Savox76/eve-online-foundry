@@ -178,6 +178,19 @@ Corp-Server nachträglich eingebaut werden:
 - Mailinhalte landen **nie** in `esi_sync_runs`, Logs oder Fehlermeldungen.
 - Scope entziehen **löscht** die lokal gespeicherten Mails dieses Charakters.
 
+## Der Login im Betrieb
+
+Ablauf und Absicherung stehen in `docs/architecture.md`. Was im Alltag
+tatsächlich schiefgeht, steht hier:
+
+| Symptom | Ursache |
+|---|---|
+| `invalid_grant` beim Refresh | Fast immer ein **alter** Refresh Token — der neue aus der letzten Antwort wurde nicht gespeichert. Sonst: im Portal abgemeldet oder Charakter verkauft. |
+| Login-Fenster kommt, Rückkehr scheitert | Callback-URL im Portal stimmt nicht exakt. Die SSO weist jede Abweichung zurück, auch einen abweichenden Port. |
+| Charakter zeigt `needs_reauth` | Drei Fehlversuche in Folge, ein `invalid_grant`, oder der `owner`-Claim hat sich geändert. Die Begründung steht in der Oberfläche. |
+| Corp-Route antwortet 403 | Scope erteilt, In-Game-Rolle fehlt. Die Oberfläche listet betroffene Scopes samt benötigter Rolle. |
+| Erster Login mit Minimal-Scopes bricht ab | Der `scp`-Claim kam als String statt als Liste — dafür gibt es `normalize_scp_claim()`. |
+
 ## Was vor dem Bau zu prüfen ist
 
 Diese Angaben sind aus der Dokumentation übernommen und **nicht** gegen einen
@@ -193,3 +206,9 @@ echten Abruf verifiziert:
       im `X-Ratelimit-Group`-Header tatsächlich meldet. Der Client übernimmt
       die Server-Angabe, die lokale Zuordnung ist nur die Vorab-Annahme.
 - [ ] Die Callback-URL (siehe offener Punkt in `architecture.md`).
+- [ ] **Der Login selbst.** Der gesamte Ablauf ist gegen einen nachgebauten
+      SSO-Dienst getestet — selbst signierte Tokens, eigener JWKS,
+      simulierter Rückruf. Gegen `login.eveonline.com` gelaufen ist er
+      **nie**, weil dafür eine registrierte Anwendung und ein echter Account
+      nötig sind. Der erste echte Login ist deshalb der eigentliche Test von
+      Phase 1; die Fehlerfälle oben sind die, an denen zuerst zu suchen ist.
