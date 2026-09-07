@@ -27,6 +27,11 @@ jobs:
   secrets:
     name: Geheimnisse
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # gitleaks-action liest ab v3 die Metadaten des Pull Requests, um nur
+      # dessen Commits zu pruefen statt der ganzen Historie.
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,6 +40,11 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITLEAKS_CONFIG: .gitleaks.toml
+          # Ab v3 Pflicht fuer PR-Scans -- ohne ihn bricht der Job mit
+          # "GITHUB_TOKEN is now required to scan pull requests" ab. Unter v2
+          # ist die Variable wirkungslos, sie steht hier also vor dem
+          # Versionssprung und nicht danach.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   backend:
     name: Backend
