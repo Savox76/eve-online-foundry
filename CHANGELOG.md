@@ -13,7 +13,7 @@ in der Reihenfolge des Arbeitsgangs, vom Schmelzen bis zum fertigen Guss. Der
 Name steht in der Überschrift, die Versionsnummer bleibt das, worauf sich
 Updater und Fehlerberichte beziehen.
 
-## [0.2.0](https://github.com/Savox76/eve-online-foundry/compare/v0.1.0...v0.2.0) — „Erste Schmelze“ (2026-09-07)
+## [0.2.0](https://github.com/Savox76/eve-online-foundry/compare/f8ad2a2...v0.2.0) — „Erste Schmelze“ (2026-09-07)
 
 Die erste Ausbaustufe, die man benutzen kann: die Anwendung startet, ein
 Charakter meldet sich über EVE SSO an, und seine Bestände stehen in einer
@@ -52,5 +52,6 @@ bespielt, aber vollständig.
 
 ## 0.1.0
 
-Der Ur-Commit des Repositorys, nie veröffentlicht. Er dient release-please nur
-als Nullpunkt; alles Inhaltliche steht in 0.2.0.
+Nie veröffentlicht und ohne Tag: die Nummer steht nur im Manifest von
+release-please und markiert den Ur-Commit als Nullpunkt. Alles Inhaltliche
+steht in 0.2.0.
