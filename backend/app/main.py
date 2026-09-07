@@ -35,7 +35,13 @@ from app.core.migrate import MigrationError, upgrade_to_head
 from app.core.security import SessionSecretMiddleware, resolve_session_secret
 from app.esi.compat import CompatibilityDateError, check_compatibility_date
 from app.esi.errors import EsiError, EsiErrorLimited, EsiForbidden, EsiRateLimited
-from app.workers.scheduler import get_scheduler, reset_scheduler
+from app.workers import jobs
+from app.workers.scheduler import (
+    DEFAULT_SCHEDULES,
+    SyncScheduler,
+    get_scheduler,
+    reset_scheduler,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +66,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         raise
 
     scheduler = get_scheduler()
+    _register_jobs(scheduler)
     scheduler.start()
     logger.info(
         "New Eden Foundry %s bereit auf http://%s:%d", __version__, settings.host, settings.port
@@ -72,6 +79,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await dispose_engine()
         lock.release()
         logger.info("Sidecar beendet.")
+
+
+def _register_jobs(scheduler: SyncScheduler) -> None:
+    """Haengt die Laeufe an ihre Zeitplaene.
+
+    Registriert wird nur, was es auch gibt. Ein Zeitplan ohne Lauf waere ein
+    stiller Platzhalter -- und beim naechsten Blick ins Log fragt man sich,
+    warum nichts passiert.
+    """
+    by_name = {schedule.name: schedule for schedule in DEFAULT_SCHEDULES}
+    scheduler.register(by_name["assets"], jobs.sync_assets)
+    scheduler.register(by_name["skills_and_roles"], jobs.sync_roles)
 
 
 def create_app() -> FastAPI:
