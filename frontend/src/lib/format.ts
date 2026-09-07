@@ -30,3 +30,13 @@ export function formatAlter(iso: string | null | undefined, jetzt = new Date()):
   const tage = Math.round(stunden / 24);
   return `vor ${tage} ${tage === 1 ? "Tag" : "Tagen"}`;
 }
+
+const volumen = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 });
+
+/**
+ * Kubikmeter. Die Einheit, in der sich die Frage „passt das in einen Epithal?"
+ * beantworten lässt — deshalb steht sie neben jeder Menge.
+ */
+export function formatVolumen(kubikmeter: number): string {
+  return `${volumen.format(kubikmeter)} m³`;
+}

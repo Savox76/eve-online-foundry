@@ -7,11 +7,7 @@
  * dort haengt der Vite-Proxy den Header an.
  */
 
-declare global {
-  interface Window {
-    __FOUNDRY__?: { sessionSecret?: string; backendPort?: number };
-  }
-}
+import { sessionSecret } from "./bridge";
 
 export const SESSION_HEADER = "X-Foundry-Session";
 
@@ -26,13 +22,35 @@ export class ApiError extends Error {
   }
 }
 
-function headers(): HeadersInit {
-  const secret = window.__FOUNDRY__?.sessionSecret;
+async function headers(): Promise<HeadersInit> {
+  const secret = await sessionSecret();
   return secret ? { [SESSION_HEADER]: secret } : {};
 }
 
 export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(path, { headers: headers(), signal });
+  return request<T>("GET", path, { signal });
+}
+
+export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
+  return request<T>("POST", path, { body });
+}
+
+export async function apiDelete(path: string): Promise<void> {
+  await request<void>("DELETE", path, {});
+}
+
+async function request<T>(
+  method: string,
+  path: string,
+  { body, signal }: { body?: unknown; signal?: AbortSignal },
+): Promise<T> {
+  const base = await headers();
+  const response = await fetch(path, {
+    method,
+    signal,
+    headers: body === undefined ? base : { ...base, "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
 
   if (!response.ok) {
     let detail: unknown;
@@ -43,6 +61,7 @@ export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> 
     }
     throw new ApiError(errorMessage(response.status, detail), response.status, detail);
   }
+  if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
 
