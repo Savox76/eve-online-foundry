@@ -122,6 +122,10 @@ def main() -> int:
     write_png(ROOT / "assets" / "app-icon.png", 1024)
     for name, size in TAURI_SIZES.items():
         write_png(ROOT / "src-tauri" / "icons" / name, size)
+    # Im Entwicklungsbetrieb laeuft die Oberflaeche im Browser und braucht ein
+    # eigenes Favicon -- aus derselben Quelle, damit die beiden nicht
+    # auseinanderlaufen.
+    write_png(ROOT / "frontend" / "public" / "favicon.png", 64)
     print(
         "\nFuer .ico und .icns danach:\n"
         "  npm --prefix frontend run tauri icon ../assets/app-icon.png"
