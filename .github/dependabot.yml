@@ -49,6 +49,14 @@ updates:
       frontend-major:
         patterns: ["*"]
         update-types: [major]
+    # TypeScript 7 bleibt vorerst aussen vor. `typescript-eslint` verlangt bis
+    # einschliesslich 8.70.0 ein `typescript@">=4.8.4 <6.1.0"` -- ein Sprung auf
+    # 7 laesst schon `npm ci` mit ERESOLVE scheitern, und weil hier gruppiert
+    # wird, reisst dieser eine Eintrag den ganzen Major-PR mit sich (siehe #15).
+    # Wieder entfernen, sobald typescript-eslint TypeScript 7 als Peer zulaesst.
+    ignore:
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: cargo
     directory: /src-tauri
