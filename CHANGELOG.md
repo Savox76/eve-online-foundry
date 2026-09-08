@@ -13,6 +13,13 @@ in der Reihenfolge des Arbeitsgangs, vom Schmelzen bis zum fertigen Guss. Der
 Name steht in der Überschrift, die Versionsnummer bleibt das, worauf sich
 Updater und Fehlerberichte beziehen.
 
+## [0.3.0](https://github.com/Savox76/eve-online-foundry/compare/v0.2.0...v0.3.0) (2026-09-08)
+
+
+### Neu
+
+* **release:** Installer fuer Windows und Linux automatisch bauen ([0ab278e](https://github.com/Savox76/eve-online-foundry/commit/0ab278e8cacd243e4d8447f1dd4e91f608c6fe1c))
+
 ## [0.2.0](https://github.com/Savox76/eve-online-foundry/compare/f8ad2a2...v0.2.0) — „Erste Schmelze“ (2026-09-07)
 
 Die erste Ausbaustufe, die man benutzen kann: die Anwendung startet, ein
