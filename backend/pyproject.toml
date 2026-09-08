@@ -30,6 +30,11 @@ dev = [
     "mypy>=1.14",
     "bandit>=1.8",
 ]
+# Nur fuers Buendeln zum Sidecar. Steht bewusst nicht in [dev]: wer am Backend
+# arbeitet, braucht PyInstaller nicht, und es zieht eine Menge mit.
+bundle = [
+    "pyinstaller>=6.11",
+]
 
 [project.scripts]
 foundry-backend = "app.main:run"

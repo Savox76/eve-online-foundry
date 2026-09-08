@@ -6,8 +6,9 @@ wird. Dieses Skript ist diese Vorlage-Erzeugung: es schreibt
 ``assets/app-icon.png`` in 1024x1024 und die PNG-Groessen, die Tauri direkt
 einbindet.
 
-Fuer die plattformeigenen Formate (``.ico`` unter Windows, ``.icns`` unter
-macOS) danach einmal::
+Das ``.ico`` fuer Windows entsteht hier mit -- die Installer brauchen es, und
+ein Symbol, das nur auf dem Rechner des Entwicklers erzeugt wird, faellt
+irgendwann aus dem Tritt. Fuer ``.icns`` unter macOS weiterhin::
 
     npm --prefix frontend run tauri icon ../assets/app-icon.png
 
@@ -36,6 +37,12 @@ TAURI_SIZES = {
     "128x128@2x.png": 256,
     "icon.png": 512,
 }
+
+#: Groessen im ``.ico``. Die kleinen liegen als unkomprimiertes DIB darin, weil
+#: der NSIS-Installer und die Verknuepfungen im Startmenue genau die lesen; die
+#: grossen als PNG, sonst waere die Datei ein Vielfaches so gross.
+ICO_SIZES = (16, 32, 48, 64, 128, 256)
+ICO_ALS_PNG = 128
 
 
 def _hexagon(cx: float, cy: float, radius: float) -> list[tuple[float, float]]:
@@ -105,16 +112,75 @@ def _chunk(kind: bytes, payload: bytes) -> bytes:
     )
 
 
-def write_png(path: Path, size: int) -> None:
+def png_bytes(size: int) -> bytes:
     header = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(
+    return (
         b"\x89PNG\r\n\x1a\n"
         + _chunk(b"IHDR", header)
         + _chunk(b"IDAT", zlib.compress(render(size), 9))
         + _chunk(b"IEND", b"")
     )
+
+
+def write_png(path: Path, size: int) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(png_bytes(size))
     print(f"  {path.relative_to(ROOT)}  ({size}x{size})")
+
+
+def _dib(size: int) -> bytes:
+    """Ein Symbol im BMP-Teil des ICO: Kopf, BGRA von unten nach oben, Maske."""
+    roh = render(size)
+    stride = size * 4 + 1  # render() setzt je Zeile ein PNG-Filterbyte davor
+
+    xor = bytearray()
+    for y in reversed(range(size)):  # DIBs stehen auf dem Kopf
+        zeile = roh[y * stride + 1 : (y + 1) * stride]
+        for x in range(size):
+            r, g, b, a = zeile[x * 4 : x * 4 + 4]
+            xor += bytes((b, g, r, a))
+
+    # Die 1-Bit-Maske verlangt das Format auch bei 32 Bit. Sie bleibt leer,
+    # weil die Deckkraft schon im Alphakanal steht -- fehlt sie ganz, zeigt
+    # Windows das Symbol als schwarzes Rechteck.
+    maske = bytes(((size + 31) // 32) * 4 * size)
+
+    kopf = struct.pack(
+        "<IiiHHIIiiII",
+        40,  # biSize
+        size,  # biWidth
+        size * 2,  # biHeight -- Bild und Maske uebereinander
+        1,  # biPlanes
+        32,  # biBitCount
+        0,  # biCompression: BI_RGB
+        len(xor) + len(maske),  # biSizeImage
+        0,
+        0,
+        0,
+        0,
+    )
+    return kopf + bytes(xor) + maske
+
+
+def write_ico(path: Path) -> None:
+    """Schreibt das Windows-Symbol -- ohne das bauen MSI und NSIS nicht."""
+    bilder = [
+        (size, png_bytes(size) if size >= ICO_ALS_PNG else _dib(size)) for size in ICO_SIZES
+    ]
+
+    verzeichnis = bytearray(struct.pack("<HHH", 0, 1, len(bilder)))
+    versatz = 6 + 16 * len(bilder)
+    daten = bytearray()
+    for size, blob in bilder:
+        kante = 0 if size >= 256 else size  # 256 wird als 0 notiert
+        verzeichnis += struct.pack("<BBBBHHII", kante, kante, 0, 0, 1, 32, len(blob), versatz)
+        versatz += len(blob)
+        daten += blob
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(bytes(verzeichnis) + bytes(daten))
+    groessen = ", ".join(str(s) for s in ICO_SIZES)
+    print(f"  {path.relative_to(ROOT)}  ({groessen})")
 
 
 def main() -> int:
@@ -122,14 +188,12 @@ def main() -> int:
     write_png(ROOT / "assets" / "app-icon.png", 1024)
     for name, size in TAURI_SIZES.items():
         write_png(ROOT / "src-tauri" / "icons" / name, size)
+    write_ico(ROOT / "src-tauri" / "icons" / "icon.ico")
     # Im Entwicklungsbetrieb laeuft die Oberflaeche im Browser und braucht ein
     # eigenes Favicon -- aus derselben Quelle, damit die beiden nicht
     # auseinanderlaufen.
     write_png(ROOT / "frontend" / "public" / "favicon.png", 64)
-    print(
-        "\nFuer .ico und .icns danach:\n"
-        "  npm --prefix frontend run tauri icon ../assets/app-icon.png"
-    )
+    print("\nFuer .icns (macOS) danach:\n  npm run tauri icon ../assets/app-icon.png")
     return 0
 
 

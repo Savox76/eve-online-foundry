@@ -43,6 +43,7 @@ site/dist/
 src-tauri/target/
 src-tauri/gen/
 src-tauri/binaries/
+pakete/
 
 # --- Werkzeuge ----------------------------------------------------------------
 .DS_Store

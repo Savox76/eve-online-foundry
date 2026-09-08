@@ -2,28 +2,171 @@ name: Release
 
 # release-please haelt dauerhaft einen Release-PR offen, in dem die naechste
 # Version, die angehobene Versionsnummer und der fertige Changelog-Abschnitt
-# stehen. Beim Merge werden Tag und GitHub-Release samt Notes angelegt -- mehr
-# passiert hier nicht, und genau das ist gewollt (Kapitel 16).
+# stehen. Beim Merge werden Tag und GitHub-Release samt Notes angelegt -- und
+# im Anschluss bauen zwei Laeufe die Installer fuer Windows und Linux und
+# haengen sie an genau dieses Release.
 #
-# Die Installer-Builds kommen erst dazu, wenn der Signaturschluessel erzeugt und
-# als Repository-Secret hinterlegt ist. Bis dahin waere ein Release-Workflow,
-# der Binaerdateien anhaengt, nur eine Fehlerquelle: der Updater akzeptiert
-# ohnehin nichts Unsigniertes.
+# Warum die Pakete hier stehen und nicht in einem eigenen Workflow mit
+# "on: release": Ereignisse, die der GITHUB_TOKEN ausloest, starten keine
+# weiteren Workflows. Ein Release, das release-please anlegt, wuerde einen
+# solchen Workflow also nie starten -- er saehe nur nach einem Fehler aus, den
+# man nirgends findet. Der Umweg ueber "needs" ist der offizielle Weg.
+#
+# Noch nicht dabei: Signatur und Updater. Beides braucht den Schluessel aus
+# `npx tauri signer generate` als Repository-Secret; bis dahin steht
+# plugins.updater.active auf false und die Pakete sind unsigniert. Was das fuer
+# Windows bedeutet, steht in docs/runbook.md.
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      pakete_bauen:
+        description: "Installer probeweise bauen, ohne Release"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
   pull-requests: write
 
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "22"
+
 jobs:
   release-please:
+    name: Release vorbereiten
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v5
+        id: release
         with:
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
+
+  pakete:
+    name: Paket ${{ matrix.name }}
+    needs: release-please
+    # Entweder ist gerade ein Release entstanden -- oder jemand hat den
+    # Workflow von Hand mit gesetztem Haken gestartet, um den Bau zu pruefen,
+    # ohne dafuer eine Version zu verbrennen.
+    if: needs.release-please.outputs.release_created == 'true' || inputs.pakete_bauen
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-latest
+            bundles: deb,appimage
+          - name: Windows
+            os: windows-latest
+            bundles: msi,nsis
+    defaults:
+      run:
+        shell: bash # auch unter Windows, damit die Schritte identisch bleiben
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: astral-sh/setup-uv@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Systembibliotheken fuer Tauri
+        if: runner.os == 'Linux'
+        # Dieselbe Liste wie im Schalen-Job der CI, plus was erst das Buendeln
+        # braucht: file und desktop-file-utils fuer das AppImage, libxdo fuer
+        # die Fenstersteuerung.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev \
+            librsvg2-dev patchelf libsoup-3.0-dev libxdo-dev libssl-dev \
+            file desktop-file-utils
+
+      - name: Sidecar buendeln
+        # Ohne diese Datei bricht das Tauri-Build-Skript mit Exitcode 101 ab,
+        # bevor eine Zeile Rust uebersetzt wird -- der Dateiname muss das
+        # Target-Triple tragen, dafuer sorgt das Skript.
+        run: |
+          cd backend
+          uv venv
+          uv pip install -e ".[bundle]"
+          python="$PWD/.venv/bin/python"
+          [ -x "$python" ] || python="$PWD/.venv/Scripts/python.exe"
+          "$python" ../scripts/build_sidecar.py
+
+      - name: Oberflaeche
+        run: npm --prefix frontend ci
+
+      - name: Bauen
+        run: npm --prefix frontend run tauri -- build --bundles ${{ matrix.bundles }}
+
+      - name: Pakete einsammeln
+        # Tauri legt je Format ein eigenes Verzeichnis unter bundle/ an und
+        # benennt die Dateien nach productName -- also mit Leerzeichen. Die
+        # werden hier zu Bindestrichen, sonst macht GitHub beim Anhaengen
+        # Punkte daraus.
+        #
+        # Bewusst mit Shell-Globs statt find: unter Windows laeuft das hier in
+        # der Git-Bash, und dort ist nicht verlaesslich, ob `find` das aus
+        # /usr/bin ist oder das gleichnamige Programm von Windows.
+        run: |
+          shopt -s nullglob
+          mkdir -p pakete
+          gefunden=0
+          for datei in src-tauri/target/release/bundle/*/*.deb \
+                       src-tauri/target/release/bundle/*/*.AppImage \
+                       src-tauri/target/release/bundle/*/*.msi \
+                       src-tauri/target/release/bundle/*/*.exe; do
+            sauber="${datei##*/}"
+            cp "$datei" "pakete/${sauber// /-}"
+            gefunden=$((gefunden + 1))
+          done
+
+          if [ "$gefunden" -eq 0 ]; then
+            echo "Kein Paket gefunden -- der Bau lief durch, hat aber nichts abgelegt."
+            exit 1
+          fi
+
+          {
+            echo "### Pakete ${{ matrix.name }}"
+            echo
+            echo '```'
+            ls -lh pakete/
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: An das Release haengen
+        if: needs.release-please.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+        # --clobber, damit ein wiederholter Lauf (etwa nach einem Ausfall des
+        # Windows-Runners) die vorhandenen Dateien ersetzt statt abzubrechen.
+        run: gh release upload "$TAG" pakete/* --clobber --repo "$GITHUB_REPOSITORY"
+
+      - name: Als Artefakt ablegen
+        # Beim Probelauf ohne Release liegen die Pakete sonst nirgends.
+        if: needs.release-please.outputs.release_created != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: pakete-${{ matrix.name }}
+          path: pakete/
+          retention-days: 7

@@ -219,19 +219,66 @@ auch dort grün.
 ## Release
 
 `release-please` hält dauerhaft einen Release-PR offen. Beim Merge entstehen
-Tag, Release und Changelog-Abschnitt — sonst nichts.
+Tag, Release und Changelog-Abschnitt — und im Anschluss bauen zwei Läufe die
+Installer und hängen sie an genau dieses Release:
+
+| Plattform | Formate |
+|---|---|
+| Windows | `.msi` und `.exe` (NSIS-Setup) |
+| Linux | `.deb` und `.AppImage` |
+
+Beides x86-64. Ein Handgriff ist dafür nicht nötig; `release.yml` erledigt es,
+sobald der Release-PR gemergt ist.
+
+**Warum die Pakete im selben Workflow stehen** und nicht in einem eigenen mit
+`on: release`: Ereignisse, die der `GITHUB_TOKEN` auslöst, starten keine
+weiteren Workflows. Ein Release, das `release-please` anlegt, würde einen
+solchen Workflow nie starten — und der Fehler wäre nirgends zu sehen.
+
+**Den Bau prüfen, ohne eine Version zu verbrennen:** Actions → Release → *Run
+workflow*, Haken bei „Installer probeweise bauen". Dann entsteht kein Release;
+die Pakete liegen sieben Tage als Artefakt am Lauf.
 
 Eine Regel, die am Updater hängt: **ein Release mit Datenbank-Migration ist
 niemals ein Patch-Release.** Damit landet die riskante Klasse automatisch im
 Bestätigungspfad.
 
-Vor dem ersten Release mit Installern:
+### Was den Paketen noch fehlt
+
+Sie sind **unsigniert**. Das hat zwei sichtbare Folgen:
+
+- Windows zeigt beim Start des Setups den SmartScreen-Hinweis „Der Computer
+  wurde durch Windows geschützt". Über *Weitere Informationen* → *Trotzdem
+  ausführen* lässt er sich durchklicken. Dagegen hilft nur ein
+  Code-Signing-Zertifikat, und das kostet Geld — für ein persönliches Projekt
+  eine bewusste Entscheidung, keine Nachlässigkeit.
+- Der Updater bleibt aus (`plugins.updater.active` steht auf `false`). Er
+  akzeptiert grundsätzlich nichts Unsigniertes, und das ist richtig so.
+
+Vor dem ersten Release **mit** Updater:
 
 ```bash
-npx tauri signer generate
+npm --prefix frontend run tauri signer generate
 ```
 
-Der private Teil und sein Passwort werden Repository-Secrets, der öffentliche
-wandert in `tauri.conf.json` unter `plugins.updater.pubkey`. Ohne diesen
-Schlüssel akzeptiert der Updater nichts — auch nichts Manipuliertes. Erst
-danach `plugins.updater.active` auf `true` setzen.
+Der private Teil und sein Passwort werden Repository-Secrets
+(`TAURI_SIGNING_PRIVATE_KEY` und `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`), der
+öffentliche wandert in `tauri.conf.json` unter `plugins.updater.pubkey`. Ohne
+diesen Schlüssel akzeptiert der Updater nichts — auch nichts Manipuliertes.
+Erst danach `plugins.updater.active` auf `true` setzen.
+
+### Ein Paket von Hand bauen
+
+```bash
+# Sidecar zuerst — ohne ihn bricht der Tauri-Build mit Exitcode 101 ab
+cd backend && uv pip install -e ".[bundle]"
+.venv/bin/python ../scripts/build_sidecar.py
+
+# Dann das Paket für die eigene Plattform
+cd ../frontend && npm ci
+npm run tauri -- build
+```
+
+Das Ergebnis liegt unter `src-tauri/target/release/bundle/`. Unter Linux
+braucht das Bündeln über die Bibliotheken aus dem Entwicklungsbetrieb hinaus
+noch `file` und `desktop-file-utils` für das AppImage.
