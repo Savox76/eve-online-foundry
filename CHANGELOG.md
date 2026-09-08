@@ -8,6 +8,14 @@ Versioniert nach [SemVer](https://semver.org/lang/de/), unterhalb von `1.0.0`
 bis das Datenmodell stabil ist. Eine feste Regel hängt am Updater: **ein
 Release mit Datenbank-Migration ist niemals ein Patch-Release.**
 
+## [0.4.0](https://github.com/Savox76/eve-online-foundry/compare/v0.3.0...v0.4.0) (2026-09-08)
+
+
+### Neu
+
+* **paths:** Daten portabel neben der Anwendung ablegen ([0137c2b](https://github.com/Savox76/eve-online-foundry/commit/0137c2b7eefe12003f28f0fe16b9a1beda46091a))
+* **release:** portables Windows-Paket und portable.txt fuer die Tokens ([eed5351](https://github.com/Savox76/eve-online-foundry/commit/eed53516f951d75fc51ae5b5450db71ba1e81632))
+
 ## [0.3.0](https://github.com/Savox76/eve-online-foundry/compare/v0.2.0...v0.3.0) (2026-09-08)
 
 Ab diesem Release entstehen mit jedem Tag fertige Installer. Für Windows ein
