@@ -8,17 +8,11 @@ Versioniert nach [SemVer](https://semver.org/lang/de/), unterhalb von `1.0.0`
 bis das Datenmodell stabil ist. Eine feste Regel hängt am Updater: **ein
 Release mit Datenbank-Migration ist niemals ein Patch-Release.**
 
-Jedes Minor-Release trägt zusätzlich einen Namen aus dem Gießerei-Handwerk —
-in der Reihenfolge des Arbeitsgangs, vom Schmelzen bis zum fertigen Guss. Der
-Name steht in der Überschrift, die Versionsnummer bleibt das, worauf sich
-Updater und Fehlerberichte beziehen.
+## [0.3.0](https://github.com/Savox76/eve-online-foundry/compare/v0.2.0...v0.3.0) (2026-09-08)
 
-## [0.3.0](https://github.com/Savox76/eve-online-foundry/compare/v0.2.0...v0.3.0) — „Abstich“ (2026-09-08)
-
-Der Abstich ist der Moment, in dem die Schmelze den Ofen verlässt: ab diesem
-Release entstehen mit jedem Tag fertige Installer. Für Windows ein `.msi` und
-ein NSIS-Setup, für Linux ein `.deb` und ein AppImage — alle x86-64, alle an
-das Release gehängt, ohne dass jemand etwas anstoßen muss.
+Ab diesem Release entstehen mit jedem Tag fertige Installer. Für Windows ein
+`.msi` und ein NSIS-Setup, für Linux ein `.deb` und ein AppImage — alle
+x86-64, alle an das Release gehängt, ohne dass jemand etwas anstoßen muss.
 
 Sie sind **unsigniert**: Windows zeigt beim Setup den SmartScreen-Hinweis, und
 der Updater bleibt aus, weil er grundsätzlich nichts Unsigniertes annimmt. Was
