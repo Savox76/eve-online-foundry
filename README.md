@@ -23,7 +23,7 @@ Marktbot oder Ersatz für Alliance Auth und SeAT.
 
 ## Stand
 
-**[v0.2.0 „Erste Schmelze“](https://github.com/Savox76/eve-online-foundry/releases/tag/v0.2.0)
+**[v0.3.0](https://github.com/Savox76/eve-online-foundry/releases/latest)
 — Phase 1 abgeschlossen, dazu der Durchstich in Phase 2.** Die Anwendung
 startet, migriert ihre Datenbank selbst, importiert den Static Data Export —
 und verbindet Charaktere über EVE SSO, hält sie angemeldet und zeigt ihre
@@ -49,7 +49,25 @@ Der Phasenplan und die fachlichen Kapitel stehen im Masterplan; der jeweils
 aktuelle Architekturstand in [`docs/architecture.md`](docs/architecture.md) —
 **das Repository ist die Wahrheit, der Masterplan der Entwurf.**
 
-## Loslegen
+## Herunterladen
+
+Fertige Installer hängen an jedem Release — gebaut, sobald der Tag entsteht:
+
+| Windows | Linux |
+|---|---|
+| `.msi` oder das NSIS-Setup (`.exe`) | `.deb` oder das AppImage |
+
+[**Zum aktuellen Release**](https://github.com/Savox76/eve-online-foundry/releases/latest),
+x86-64.
+
+> **Sie sind nicht signiert.** Windows meldet deshalb beim Setup „Der Computer
+> wurde durch Windows geschützt“ — über *Weitere Informationen* →
+> *Trotzdem ausführen* geht es weiter. Ein Code-Signing-Zertifikat kostet
+> Geld; für ein persönliches Projekt ist das eine bewusste Entscheidung. Aus
+> demselben Grund gibt es noch keinen Updater: er nimmt grundsätzlich nichts
+> Unsigniertes an.
+
+## Selbst bauen
 
 ```bash
 # Backend
