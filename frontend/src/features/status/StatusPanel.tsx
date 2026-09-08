@@ -42,34 +42,41 @@ export function StatusPanel() {
     : 0;
 
   return (
-    <div className="grid gap-px bg-line sm:grid-cols-2 lg:grid-cols-4">
-      <Kennzahl titel="Version" wert={data.version} zusatz={`Schema ${data.database_revision ?? "—"}`} />
-      <Kennzahl
-        titel="Static Data"
-        wert={data.sde ? data.sde.build : "nicht importiert"}
-        zusatz={
-          data.sde
-            ? `${formatMenge(sdeZeilen)} Zeilen · ${formatAlter(data.sde.completed_at)}`
-            : "python -m app.sde.importer --source …"
-        }
-        zustand={data.sde ? "ok" : "warn"}
-      />
-      <Kennzahl
-        titel="Kompatibilitätsdatum"
-        wert={data.compatibility.date}
-        zusatz={`${data.compatibility.age_days} von ${data.compatibility.guaranteed_days} Tagen alt`}
-        zustand={kompatibel}
-      />
-      <Kennzahl
-        titel="ESI-Fehlerbudget"
-        wert={fehlerbudget === null ? "—" : formatMenge(fehlerbudget)}
-        zusatz={
-          data.rate_limit.breaker_seconds_left > 0
-            ? `Pause noch ${Math.ceil(data.rate_limit.breaker_seconds_left)} s`
-            : "noch kein Abruf gelaufen"
-        }
-        zustand={budgetZustand}
-      />
+    <div>
+      <div className="grid gap-px bg-line sm:grid-cols-2 lg:grid-cols-4">
+        <Kennzahl titel="Version" wert={data.version} zusatz={`Schema ${data.database_revision ?? "—"}`} />
+        <Kennzahl
+          titel="Static Data"
+          wert={data.sde ? data.sde.build : "nicht importiert"}
+          zusatz={
+            data.sde
+              ? `${formatMenge(sdeZeilen)} Zeilen · ${formatAlter(data.sde.completed_at)}`
+              : "python -m app.sde.importer --source …"
+          }
+          zustand={data.sde ? "ok" : "warn"}
+        />
+        <Kennzahl
+          titel="Kompatibilitätsdatum"
+          wert={data.compatibility.date}
+          zusatz={`${data.compatibility.age_days} von ${data.compatibility.guaranteed_days} Tagen alt`}
+          zustand={kompatibel}
+        />
+        <Kennzahl
+          titel="ESI-Fehlerbudget"
+          wert={fehlerbudget === null ? "—" : formatMenge(fehlerbudget)}
+          zusatz={
+            data.rate_limit.breaker_seconds_left > 0
+              ? `Pause noch ${Math.ceil(data.rate_limit.breaker_seconds_left)} s`
+              : "noch kein Abruf gelaufen"
+          }
+          zustand={budgetZustand}
+        />
+      </div>
+      <p className="mt-2 break-all font-mono text-[11px] text-faint">
+        Daten:{" "}
+        <span className="text-muted">{data.data_dir}</span>{" "}
+        {data.portable ? "— portabel, neben der Anwendung" : "— Ablage des Systems"}
+      </p>
     </div>
   );
 }

@@ -83,6 +83,11 @@ class StatusResponse(BaseModel):
     version: str
     database_revision: str | None = None
     database_path: str
+    data_dir: str = Field(description="Ordner mit Datenbank, Sicherungen und Zwischenspeicher")
+    portable: bool = Field(
+        default=False,
+        description="Ob die Daten neben der Anwendung liegen statt in der Systemablage",
+    )
     sde: SdeBuildInfo | None = None
     compatibility: CompatibilityInfo
     rate_limit: RateLimitInfo

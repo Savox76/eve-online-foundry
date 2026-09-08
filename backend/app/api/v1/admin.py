@@ -16,7 +16,7 @@ from app import __version__
 from app.core.config import ESI_COMPATIBILITY_DATE
 from app.core.db import get_session
 from app.core.migrate import current_revision
-from app.core.paths import database_path
+from app.core.paths import data_dir, database_path, ist_portabel
 from app.core.ratelimit import get_budget
 from app.esi.compat import GUARANTEED_DAYS, WARN_AFTER_DAYS, check_compatibility_date
 from app.models.esi import SyncRun
@@ -62,6 +62,8 @@ async def status(
         version=__version__,
         database_revision=current_revision(database_path()),
         database_path=str(database_path()),
+        data_dir=str(data_dir()),
+        portable=ist_portabel(),
         sde=SdeBuildInfo(**build) if build else None,
         compatibility=_compatibility_info(),
         rate_limit=RateLimitInfo.model_validate(get_budget().snapshot()),

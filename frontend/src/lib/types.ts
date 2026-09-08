@@ -57,6 +57,8 @@ export interface StatusResponse {
   version: string;
   database_revision: string | null;
   database_path: string;
+  data_dir: string;
+  portable: boolean;
   sde: SdeBuildInfo | null;
   compatibility: CompatibilityInfo;
   rate_limit: RateLimitInfo;
