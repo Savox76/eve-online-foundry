@@ -1,7 +1,7 @@
 # New Eden Foundry
 
-Ein Industrie-Werkzeug für EVE Online als eigenständige Anwendung für Windows,
-Linux und macOS. Login über EVE SSO, kein Server, kein Browser.
+Ein Industrie-Werkzeug für EVE Online als eigenständige Anwendung für Windows
+und Linux. Login über EVE SSO, kein Server, kein Browser.
 
 > **Persönliches Projekt.** Keine Zusage auf Support, keine Zusage auf
 > Verfügbarkeit. Fehlerberichte sind willkommen — siehe aber den Hinweis zu
@@ -59,6 +59,10 @@ Fertige Installer hängen an jedem Release — gebaut, sobald der Tag entsteht:
 
 [**Zum aktuellen Release**](https://github.com/Savox76/eve-online-foundry/releases/latest),
 x86-64.
+
+**macOS ist bewusst nicht dabei.** Der Quelltext läuft dort, aber eine
+auslieferbare Anwendung verlangt Apple-Developer-Account und Notarisierung —
+für ein persönliches Projekt kein sinnvoller Aufwand.
 
 > **Sie sind nicht signiert.** Windows meldet deshalb beim Setup „Der Computer
 > wurde durch Windows geschützt“ — über *Weitere Informationen* →
