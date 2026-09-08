@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from cryptography.fernet import Fernet
 
-from app.core.paths import data_dir
+from app.core.paths import PORTABLE_MARKER, data_dir, reist_mit
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +196,16 @@ def get_token_store() -> TokenStore:
     """Der Speicher dieses Laufs -- Schluesselbund, sonst verschluesselte Datei."""
     global _store
     if _store is None:
-        if keyring_available():
+        if reist_mit():
+            _store = EncryptedFileTokenStore()
+            logger.info(
+                "%s liegt neben der Anwendung -- Refresh Tokens wandern in den Ordner "
+                "statt in den Schluesselbund. Sie reisen damit mit und lassen auf "
+                "diesem Rechner nichts zurueck; der Schluessel liegt aber neben den "
+                "Daten. Wer den Ordner hat, hat die Tokens.",
+                PORTABLE_MARKER,
+            )
+        elif keyring_available():
             _store = KeyringTokenStore()
             logger.info("Refresh Tokens liegen im Schluesselbund des Systems.")
         else:

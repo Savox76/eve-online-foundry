@@ -136,3 +136,29 @@ def test_schreibprobe_laesst_nichts_liegen(tmp_path: Path) -> None:
     ordner = tmp_path / "sauber"
     assert paths._ist_beschreibbar(ordner) is True
     assert list(ordner.iterdir()) == []
+
+
+def test_ohne_markierung_reist_nichts_mit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("FOUNDRY_DATA_DIR", str(tmp_path))
+    assert paths.reist_mit() is False
+
+
+def test_markierung_im_datenordner_wird_erkannt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("FOUNDRY_DATA_DIR", str(tmp_path))
+    (tmp_path / paths.PORTABLE_MARKER).write_text("", encoding="utf-8")
+    assert paths.reist_mit() is True
+
+
+def test_markierung_neben_der_anwendung_wird_erkannt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Dort legt der Benutzer sie hin -- neben die Exe, nicht in den Datenordner."""
+    programm = tmp_path / "New Eden Foundry"
+    programm.mkdir()
+    (programm / paths.PORTABLE_MARKER).write_text("", encoding="utf-8")
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", str(programm / "foundry-backend"))
+
+    assert paths.reist_mit() is True

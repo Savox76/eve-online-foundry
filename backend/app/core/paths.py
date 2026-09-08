@@ -42,6 +42,11 @@ APP_AUTHOR = "Savox76"
 #: umschalten -- der Ordnername soll dabei nicht wandern.
 DATA_DIR_NAME = "data"
 
+#: Wer diese Datei neben die Anwendung legt, sagt damit: dieses Exemplar reist
+#: mit. Dann gehoeren auch die Refresh Tokens in den Ordner statt in den
+#: Schluesselbund des Rechners, auf dem es gerade steckt.
+PORTABLE_MARKER = "portable.txt"
+
 
 def _programm_verzeichnis() -> Path | None:
     """Der Ordner, den der Benutzer als *die Anwendung* wahrnimmt.
@@ -102,6 +107,21 @@ def data_dir() -> Path:
         root = _portabler_datenordner() or Path(user_data_dir(APP_NAME, APP_AUTHOR))
     root.mkdir(parents=True, exist_ok=True)
     return root
+
+
+def reist_mit() -> bool:
+    """Ob eine Datei ``portable.txt`` neben der Anwendung oder bei den Daten liegt.
+
+    Sie ist der ausdrueckliche Wunsch des Benutzers, dass nichts auf dem
+    Rechner zurueckbleibt -- und die einzige Stelle, an der die Anwendung
+    dafuer den schwaecheren Tokenspeicher waehlt. Ohne die Datei bleibt es
+    beim Schluesselbund des Systems.
+    """
+    kandidaten = [data_dir()]
+    programm = _programm_verzeichnis()
+    if programm is not None:
+        kandidaten.append(programm)
+    return any((ordner / PORTABLE_MARKER).exists() for ordner in kandidaten)
 
 
 def ist_portabel() -> bool:

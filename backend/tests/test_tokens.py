@@ -121,3 +121,36 @@ def test_speicher_im_arbeitsspeicher_ueberlebt_nichts() -> None:
     store.save(9_000_001, "fluechtig")
     assert store.load(9_000_001) == "fluechtig"
     assert MemoryTokenStore().load(9_000_001) is None
+
+
+def test_markierung_erzwingt_die_datei_statt_des_schluesselbunds(
+    isolated_data_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Der ganze Sinn der Markierung: auf einem fremden Rechner nichts zuruecklassen.
+
+    Der Schluesselbund waere hier verfuegbar -- er wird trotzdem nicht genommen.
+    """
+    from app.core.paths import PORTABLE_MARKER
+    from app.esi import tokens as modul
+
+    (isolated_data_dir / PORTABLE_MARKER).write_text("", encoding="utf-8")
+    monkeypatch.setattr(modul, "keyring_available", lambda: True)
+    modul.set_token_store(None)
+    try:
+        assert modul.get_token_store().kind == "encrypted-file"
+    finally:
+        modul.set_token_store(None)
+
+
+def test_ohne_markierung_gewinnt_der_schluesselbund(
+    isolated_data_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.esi import tokens as modul
+
+    monkeypatch.setattr(modul, "keyring_available", lambda: True)
+    monkeypatch.setattr(modul, "KeyringTokenStore", lambda: modul.MemoryTokenStore())
+    modul.set_token_store(None)
+    try:
+        assert modul.get_token_store().kind != "encrypted-file"
+    finally:
+        modul.set_token_store(None)

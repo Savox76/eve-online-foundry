@@ -60,14 +60,50 @@ sudo apt-get install -y libwebkit2gtk-4.1-dev libsoup-3.0-dev \
 
 ## Wo die Daten liegen
 
+### Portabel oder installiert
+
+Die Anwendung entscheidet das selbst, an genau einer Stelle
+(`app/core/paths.py`), und die Regel wählt sich richtig aus:
+
+**Darf sie neben sich schreiben**, landet alles in `<Programmordner>/data`.
+Das ist der Normalfall beim portablen ZIP und beim AppImage. Ordner kopieren
+heißt alles mitkopieren, Ordner löschen heißt, dass nichts zurückbleibt.
+
+**Darf sie es nicht**, weicht sie auf die Ablage des Systems aus:
+
 | System | Pfad |
 |---|---|
 | Windows | `%LOCALAPPDATA%\NewEdenFoundry` |
 | macOS | `~/Library/Application Support/NewEdenFoundry` |
 | Linux | `~/.local/share/NewEdenFoundry` (bzw. `$XDG_DATA_HOME`) |
 
-`FOUNDRY_DATA_DIR` sticht das aus — nützlich zum Testen mit einem leeren
+Das trifft die Installer — unter `C:\Program Files` und `/usr/bin` darf ein
+normaler Benutzer nicht schreiben, und das ist richtig so — und den
+Entwicklungsbetrieb, in dem es gar keinen Programmordner gibt.
+
+Geprüft wird durch **einen echten Schreibversuch**, nicht über Rechte:
+`os.access` liegt unter Windows regelmäßig daneben, und genau daran hängt hier
+die Entscheidung. Welcher Ordner es geworden ist, steht in der Anwendung unter
+*Betriebszustand*.
+
+`FOUNDRY_DATA_DIR` sticht beides aus — nützlich zum Testen mit einem leeren
 Stand.
+
+### Wenn es mitreisen soll
+
+Eine leere Datei `portable.txt` neben der Anwendung (oder im Datenordner)
+verschiebt zusätzlich die **Refresh Tokens** aus dem Schlüsselbund des Systems
+in die verschlüsselte Datei im Datenordner.
+
+Gedacht ist das für den USB-Stick: die Zugangsdaten reisen mit, und auf einem
+fremden Rechner bleibt nichts im Anmeldeinformations-Manager zurück.
+
+> **Der Preis steht in `app/esi/tokens.py` und gilt hier besonders:** der
+> Schlüssel liegt neben den Daten. Wer den Ordner in die Hände bekommt, kann
+> die Tokens entschlüsseln und damit auf die verbundenen Charaktere zugreifen.
+> Ein verlorener Stick ist damit ein anderes Problem als ein verlorener Stick
+> ohne diese Datei. Ohne `portable.txt` bleiben die Tokens im Schlüsselbund —
+> besser geschützt, aber an diesen einen Rechner gebunden.
 
 | Datei | Inhalt |
 |---|---|
@@ -224,10 +260,13 @@ Installer und hängen sie an genau dieses Release:
 
 | Plattform | Formate |
 |---|---|
-| Windows | `.msi` und `.exe` (NSIS-Setup) |
-| Linux | `.deb` und `.AppImage` |
+| Windows | ZIP (portabel), `.msi`, `.exe` (NSIS-Setup) |
+| Linux | `.AppImage` (portabel), `.deb` |
 
-Beides x86-64. Ein Handgriff ist dafür nicht nötig; `release.yml` erledigt es,
+Alles x86-64. Das portable ZIP schnürt `release.yml` selbst aus der nicht
+gebündelten Binärdatei und dem Sidecar; unter Linux braucht es das nicht, weil
+das AppImage bereits portabel ist und zusätzlich die Systembibliotheken
+mitbringt. Ein Handgriff ist dafür nicht nötig; `release.yml` erledigt es,
 sobald der Release-PR gemergt ist.
 
 **Warum die Pakete im selben Workflow stehen** und nicht in einem eigenen mit

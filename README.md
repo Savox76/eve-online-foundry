@@ -51,14 +51,29 @@ aktuelle Architekturstand in [`docs/architecture.md`](docs/architecture.md) —
 
 ## Herunterladen
 
-Fertige Installer hängen an jedem Release — gebaut, sobald der Tag entsteht:
+Jedes Release bringt fertige Pakete mit, gebaut sobald der Tag entsteht —
+alle x86-64:
 
-| Windows | Linux |
-|---|---|
-| `.msi` oder das NSIS-Setup (`.exe`) | `.deb` oder das AppImage |
+| | Windows | Linux |
+|---|---|---|
+| **Portabel** | ZIP zum Auspacken | AppImage |
+| Installiert | `.msi` oder NSIS-Setup (`.exe`) | `.deb` |
 
-[**Zum aktuellen Release**](https://github.com/Savox76/eve-online-foundry/releases/latest),
-x86-64.
+[**Zum aktuellen Release**](https://github.com/Savox76/eve-online-foundry/releases/latest)
+
+**Portabel heißt hier wörtlich:** die Anwendung legt ihren Ordner `data` neben
+sich ab — Datenbank, Sicherungen, Zwischenspeicher. Ordner kopieren heißt
+alles mitkopieren, Ordner löschen heißt, dass nichts zurückbleibt. Wo die
+Daten tatsächlich liegen, steht in der Anwendung unter *Betriebszustand*.
+
+Aus den Installern heraus geht das nicht — unter `C:\Program Files` und
+`/usr/bin` darf die Anwendung nicht schreiben, und dann bleibt es bei der
+Ablage des Systems. Sie merkt das selbst und sagt es dort auch.
+
+Soll es wirklich mitreisen, etwa auf einem USB-Stick, kommt eine leere Datei
+`portable.txt` neben die Anwendung. Dann wandern auch die EVE-Zugangsdaten in
+den Ordner statt in den Schlüsselbund des Rechners. Was das kostet, steht im
+[Runbook](docs/runbook.md#portabel-oder-installiert).
 
 **macOS ist bewusst nicht dabei.** Der Quelltext läuft dort, aber eine
 auslieferbare Anwendung verlangt Apple-Developer-Account und Notarisierung —

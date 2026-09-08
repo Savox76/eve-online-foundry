@@ -118,6 +118,33 @@ jobs:
       - name: Bauen
         run: npm --prefix frontend run tauri -- build --bundles ${{ matrix.bundles }}
 
+      - name: Portables Paket schnueren
+        if: runner.os == 'Windows'
+        # Ein Ordner zum Auspacken: Schale, Sidecar, LIESMICH -- sonst nichts.
+        # Beim ersten Start legt die Anwendung daneben ihren data-Ordner an.
+        #
+        # Unter Linux braucht es das nicht: das AppImage ist bereits ein
+        # portables Einzelstueck und bringt anders als ein blosser Ordner auch
+        # die Systembibliotheken mit.
+        #
+        # Das Zippen macht Python und nicht `zip`: in der Git-Bash der
+        # Windows-Runner ist `zip` nicht verlaesslich vorhanden.
+        run: |
+          version=$(python3 -c "import json; print(json.load(open('src-tauri/tauri.conf.json'))['version'])")
+          quelle=$(python3 scripts/build_sidecar.py --check | sed -n 's/^Tauri erwartet: //p')
+          test -n "$version" || { echo "Version nicht ermittelbar"; exit 1; }
+          test -f "$quelle" || { echo "Sidecar $quelle fehlt"; exit 1; }
+
+          ordner="New-Eden-Foundry_${version}_x64-portable"
+          mkdir -p "$ordner"
+          cp src-tauri/target/release/new-eden-foundry.exe "$ordner/"
+          cp "$quelle" "$ordner/foundry-backend.exe"
+          cp packaging/LIESMICH-portabel.txt "$ordner/LIESMICH.txt"
+
+          python3 -c "import shutil, sys; shutil.make_archive(sys.argv[1], 'zip', sys.argv[1])" "$ordner"
+          mkdir -p pakete
+          mv "$ordner.zip" pakete/
+
       - name: Pakete einsammeln
         # Tauri legt je Format ein eigenes Verzeichnis unter bundle/ an und
         # benennt die Dateien nach productName -- also mit Leerzeichen. Die

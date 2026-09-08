@@ -1,0 +1,45 @@
+New Eden Foundry - portable
+===========================
+
+Auspacken, new-eden-foundry.exe starten. Mehr ist nicht noetig.
+
+Beim ersten Start legt die Anwendung neben sich einen Ordner "data" an:
+Datenbank, Sicherungen, Static-Data-Zwischenspeicher. Diesen Ordner
+mitkopieren heisst alles mitkopieren; ihn loeschen heisst, dass nichts
+zurueckbleibt.
+
+Wo die Daten tatsaechlich liegen, steht in der Anwendung unter
+Betriebszustand. Liegt der Ordner an einer Stelle, an der Windows nicht
+schreiben laesst (etwa unter C:\Program Files), weicht die Anwendung auf
+%LOCALAPPDATA%\NewEdenFoundry aus und sagt es dort auch.
+
+
+Wenn es wirklich mitreisen soll (USB-Stick)
+-------------------------------------------
+
+Lege eine leere Datei namens portable.txt neben new-eden-foundry.exe.
+
+Dann liegen auch die EVE-Zugangsdaten (Refresh Tokens) im Ordner statt im
+Anmeldeinformations-Manager von Windows. Sie reisen damit mit, und auf einem
+fremden Rechner bleibt nichts zurueck.
+
+Der Preis: die Tokens sind zwar verschluesselt, aber der Schluessel liegt
+daneben. Wer den Ordner in die Haende bekommt, hat damit Zugriff auf die
+verbundenen Charaktere. Ohne portable.txt bleiben die Tokens im
+Anmeldeinformations-Manager - besser geschuetzt, aber an diesen Rechner
+gebunden.
+
+
+Voraussetzungen
+---------------
+
+Windows 10 oder 11. Die WebView2-Laufzeit ist dort bereits vorhanden.
+
+
+Diese Pakete sind nicht signiert. Windows zeigt deshalb beim ersten Start
+den SmartScreen-Hinweis; ueber "Weitere Informationen" -> "Trotzdem
+ausfuehren" geht es weiter. Ein Code-Signing-Zertifikat kostet Geld und
+gehoert bei einem persoenlichen Projekt nicht dazu.
+
+Quelltext, Fehlerberichte und neuere Versionen:
+https://github.com/Savox76/eve-online-foundry
